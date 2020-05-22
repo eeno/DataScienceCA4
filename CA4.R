@@ -55,7 +55,7 @@ par(opar)
 #Test if a time series is stationary
 library(tseries)
 # p-value < 0.05 indicates the TS is stationary
-# In this eample, Nile data is not stationary
+
 adf.test(ts_planning_permission)
 
 
@@ -86,6 +86,89 @@ plot(seasonal_decomposition)
 
 
 
+#testing stationarity
+#inn order to test the stationarity of the time series, let’s run the Augmented Dickey-Fuller Test using the adf.test() function 
+#from the tseries package.
+# The null hypothesis H0 : the time series is non stationary
+# The alternative hypothesis HA : the time series is stationary
+
+
+library(tseries)
+suggested_k <- trunc((length(ts_planning_permission)-1)^(1/3))
+suggested_k
+
+
+adf.test(ts_planning_permission, alternative = "stationary")
+
+
+adf.test(ts_planning_permission, alternative = "stationary", k = 12)
+
+
+
+#Method 2 : Test stationarity of the time series (Autocorrelation)
+library(forecast)
+acf(ts_planning_permission)
+
+
+pacf(ts_planning_permission)
+
+library(forecast)
+nsdiffs(ts_planning_permission)
+
+
+
+
+
+log_planning_permission <- log(ts_planning_permission)
+
+
+# Show both side-by-side for comparison
+opar <- par(no.readonly=TRUE)
+par(mfrow=c(1,2))
+plot(ts_planning_permission, main = "OriginalPlanning permission dataset")
+plot(ts_planning_permission, main = "Differenced planning permission dataset")
+par(opar)
+
+nsdiffs(log_planning_permission)
+
+
+
+diff_ts_planning <- diff(ts_planning_permission, lag = 6, diffferences = 2)
+
+opar <- par(no.readonly=TRUE)
+par(mfrow=c(1,2))
+plot(ts_planning_permission, main = "Original Air Passengers dataset")
+plot(diff_ts_planning, main = "Differenced Air Passengers dataset")
+par(opar)
+
+
+seasonal_decomposition <- stl(ts_planning_permission, s.window="period")
+plot(seasonal_decomposition)
+
+acf(diff_ts_planning)
+
+
+pacf(diff_ts_planning)
+
+ts_planning_stl <- stl(ts_planning_permission,"periodic")  # decompose the TS
+ts_planning_sa <- seasadj(ts_planning_stl)  # de-seasonalize
+plot(ts_planning_permission, type="l")  # original series
+plot(ts_planning_sa, type="l")  # seasonal adjusted
+seasonplot(ts_planning_sa, 12, col=rainbow(12), year.labels=TRUE, main="Seasonal plot: Airpassengers") # seasonal frequency set as 12 for monthly data.
+
+#arima elements arima(pdq)(PDQ)12
+#for this the PACF for non difference data gives 3 lags befir it bounds to confidnece interval (p)
+#Difference is 1
+#q = 1
+#P = 2
+#D = 1
+#Q = 2
+fit <- arima(ts_planning_permission,
+             c(3,1,1),
+             seasonal = list(order = c(2,1,2), 
+             period = 12))
+
+fit
 
 # #Replace - with M to match the "month and year" column in POI2 and CPI2
 # test$year_month <- gsub("-","M",test$year_month)
@@ -98,4 +181,5 @@ plot(seasonal_decomposition)
 #               xlab = "Consumer Price index",
 #               ylab = "Number of granted applications")
 
-
+auto_arima_model <- auto.arima(ts_planning_permission)
+auto_arima_model
